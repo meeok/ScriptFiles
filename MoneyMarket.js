@@ -9,3 +9,7 @@ function customValidation (op){
         case "D": {}
     }
 }
+
+function gSelectMarket(){
+    executeServerEvent('onSelectMarket','onChnage','',true);
+}
