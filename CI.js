@@ -19,8 +19,7 @@ var processName  = getWorkItemData("processName");
 var activityName = getWorkItemData("activityName");
 
 function formLoadCI(){
-	executeServerEvent("form", "formLoad" , "" ,true);
-	displayDenomination();
+	setDenomination();
 	transferTable();
 	changeInTable();
 	setCashReturnRowVisible();	
@@ -28,8 +27,6 @@ function formLoadCI(){
 
 function customValidation(op) {
 	if(op == "D" || op == "I") {
-		var today = new Date();
-		var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate()+' '+today.getHours()+':'+today.getMinutes()+':'+today.getSeconds();
 		var reqType = getValue("REQ_TYPE");
 		var prevWs = getValue("PREV_WS");
 		var decision = getValue("DECISION");
@@ -39,6 +36,9 @@ function customValidation(op) {
 		var insuranceCover = "RequestInsurance";
 		var insuranceTableCount = getGridRowCount("table22");
 		var cvFlag = getValue("CVFLAG");
+		var exception = getValue("EXCEPTION");
+		var no = "NO";
+		var yes = "YES";
 		var Y = "Y";
 
 		if(activityName=="Spoke_Initiator" || activityName == "Spoke_Initiator_Exception") {
@@ -181,13 +181,8 @@ function customValidation(op) {
 			}
 			}
 			}
-			decisionHistory("table2");
-			//executeServerEvent("","SENDMAIL","",true);
 		}
 		else if(activityName == "RV_Mgt_Officer") {
-
-			decisionHistory("table2");
-			//executeServerEvent("","SENDMAIL","",true);
 		}
 		else if(activityName=="Spoke_Verifier" || 
 				activityName=="Spoke_Hold_Request" || 
@@ -364,15 +359,13 @@ function customValidation(op) {
 					}
 				}
 			}
-			decisionHistory("table2");
-			executeServerEvent("","SENDMAIL","",true);
 		}
 		else if(activityName.includes("Hub") || 
-				activityName == "Central_Vault" || 
-				activityName == "Central_Vault_Verifier" || 
-				activityName == "Central_Vault_Exception" || 
+				activityName == "Central_Vault_LCY" || 
+				activityName == "CV_Verifier_LCY" || 
+				activityName == "Central_Vault_FCY" || 
 				activityName == "Central_Vault_Post_Exception" || 
-				activityName == "CV_Foreign_Currency_Post"){
+				activityName == "CV_Verifier_FCY"){
 
 			if (activityName == "Hub_Initiator" || activityName == "Hub_Initiator_Exception"){
 				 if (reqType == cashEvacuation && decision == "Submit"){
@@ -443,23 +436,25 @@ function customValidation(op) {
 						showMessage("","Only 2 members of staffs are required","error");
 						return false
 					}
-					 var resp = executeServerEvent("checkSol","CUSTOM",getGridRowCount("table35"),true);
-					 if(!(resp==null || resp=="")) {
-					 	showMessage("",resp,"error");
-					 	return false;
-					}
+					//  var resp = executeServerEvent("checkSol","CUSTOM",getGridRowCount("table35"),true);
+					//  if(!(resp==null || resp=="")) {
+					//  	showMessage("",resp,"error");
+					//  	return false;
+					// }
 
 				var retMsg=executeServerEvent("", "ONDONE" ,  getGridRowCount("table1")  ,true);
-				if(!(retMsg==null || retMsg=="")) {
-					showMessage("",retMsg,"error");
-					return false;
-				}
+					if(!isEmpty(retMsg)) {
+						showMessage("",retMsg,"error");
+						return false;
+					}
 				}
 			else if(reqType == cashEvacuation){
-				var retMsg=executeServerEvent("", "ONDONE" ,  getGridRowCount("table19")  ,true);
-				if(!(retMsg==null || retMsg=="")) {
-					showMessage("",retMsg,"error");
-					return false;
+					if (exception == no ){
+					var retMsg=executeServerEvent("", "ONDONE" ,  getGridRowCount("table19")  ,true);
+					if(!isEmpty(retMsg)) {
+						showMessage("",retMsg,"error");
+						return false;
+					}
 				}
 			}
 			else if (reqType == cashRequestException && decision == "Submit"){
@@ -474,11 +469,11 @@ function customValidation(op) {
 						return false
 					}
 					
-					var resp = executeServerEvent("checkSol","CUSTOM",getGridRowCount("table35"),true);
-					if(!(resp==null || resp=="")) {
-						showMessage("",resp,"error");
-						return false;
-				   }
+				// 	var resp = executeServerEvent("checkSol","CUSTOM",getGridRowCount("table35"),true);
+				// 	if(!(resp==null || resp=="")) {
+				// 		showMessage("",resp,"error");
+				// 		return false;
+				//    }
 
 				var retMsg=executeServerEvent("", "ONDONE" ,  getGridRowCount("table24")  ,true);
 				if(!(retMsg==null || retMsg=="")) {
@@ -526,7 +521,7 @@ function customValidation(op) {
 				executeServerEvent("runMailSetup","CUSTOM","",true);
 				}
 			} 
-			else if(activityName=="Central_Vault_Verifier"){
+			else if(activityName=="CV_Verifier_LCY"){
 				if (reqType == cashRequest && decision == "Submit"){
 						var count = getGridRowCount("table35");
 						if (count < 2){
@@ -539,11 +534,11 @@ function customValidation(op) {
 							return false;
 						}
 	
-					 var resp = executeServerEvent("checkSol","CUSTOM",getGridRowCount("table35"),true);
-					 if(!(resp==null || resp=="")) {
-					 	showMessage("",resp,"error");
-						return false;
-					 }
+					//  var resp = executeServerEvent("checkSol","CUSTOM",getGridRowCount("table35"),true);
+					//  if(!(resp==null || resp=="")) {
+					//  	showMessage("",resp,"error");
+					// 	return false;
+					//  }
 				}
 				if (cvFlag == Y){
 					if (reqType == cashRequest && decision == "Submit"){
@@ -576,7 +571,7 @@ function customValidation(op) {
 				}
 			}
 		} 
-			else if (activityName == "CV_Foreign_Currency_Post"){
+			else if (activityName == "CV_Verifier_FCY"){
 				if (cvFlag == Y){
 					if (reqType == cashRequest){
 						var retMsg= executeServerEvent("", "ONDONE" , getGridRowCount("table27") ,true);
@@ -625,7 +620,7 @@ function customValidation(op) {
 				}
 			}
 			} 
-			else if (activityName == "Central_Vault" || activityName == "Central_Vault_Exception"){
+			else if (activityName == "Central_Vault_LCY" || activityName == "Central_Vault_FCY"){
 				if (cvFlag == Y){
 					if (reqType == cashRequest){
 					saveWorkItem();
@@ -677,14 +672,67 @@ function customValidation(op) {
 					}
 				}
 			}
-				decisionHistory("table8");
-				//executeServerEvent("","SENDMAIL","",true);
-
 		}
+		sendMail();
+		setDecisionHistory();
  	} else if(op == "S"){
 
 	}
 	return true;
+}
+
+function postManually(){
+	executeServerEvent('','postManually','',true);
+}
+
+function exception(){
+	var currWs = getWorkItemData("activityName");
+	var reqType = getValue("REQ_TYPE");
+	var prevWs = getValue("PREV_WS");
+	var decision = getValue("DECISION");
+	var cashRequest = "CashRequest";
+	var cashEvacuation = "CashEvacuation";
+	var cashRequestException = "CashRequestException";
+	var cvFlag = getValue("CVFLAG");
+	var Y = "Y";
+	setStyle("EXCEPTION","disable","true");
+	executeServerEvent('','exception','',true);
+	if (prevWs == "Hub_Verifier_Cash_Return")
+		setStyle("add_table10","visible","false");
+	else if (currWs == "CV_Verifier_LCY"){
+		setStyle("add_table11","visible","false");
+	}
+	else if (currWs == "Spoke_Cash_Return_Maker"){
+		if (cvFlag == Y){}
+		else {
+			if (reqType == cashRequestException)
+				setStyle("add_table24","visible","false");
+		}
+	}
+}
+
+function validateWi(btn){
+	var activityName = getWorkItemData("activityName");
+	if (activityName.includes("Spoke")){
+		var resp = executeServerEvent(btn.id,"validateWi",getGridRowCount("table15")+"#"+getGridRowCount("table16")
+									+"#"+getGridRowCount("table17")+"#"+getGridRowCount("table18"),true);
+		if (!isEmpty(resp))
+			showMessage("",resp,"confirm");
+	}
+	else {
+	var resp = executeServerEvent(btn.id,"validateWi",getGridRowCount("table15")+"#"+getGridRowCount("table16")
+									+"#"+getGridRowCount("table17")+"#"+getGridRowCount("table18")+"#"+getGridRowCount("table35"),true);
+	if (!isEmpty(resp))
+		showMessage("",resp,"confirm");
+	}
+}
+
+function setTranLocal(control){
+	setStyle(control.id,"disable", "true");
+}
+
+function sendMail(){
+	executeServerEvent("","SENDMAIL","",true);
 }
 
 function checkSpCvCrAmount(control){
@@ -694,11 +742,19 @@ function checkSpCvCrAmount(control){
 }
 
 function onLoadSpCvCr(){
-	executeServerEvent("onLoadSpokeCvCrTable","ONLOAD","",true);
+	var resp = executeServerEvent("onLoadSpokeCvCrTable","ONLOAD","",true);
+	if (!isEmpty(resp))
+		showMessage("",resp,"confirm");
+}
+
+function isEmpty(resp){
+	return resp == null || resp == "";
 }
 
 function onLoadSpCvCe(){
-executeServerEvent("onLoadSpokeCvCeTable","ONLOAD","",true);
+var resp = executeServerEvent("onLoadSpokeCvCeTable","ONLOAD","",true);
+if (!isEmpty(resp))
+	showMessage("",resp,"confirm");
 }
 
 function moveAmount(){
@@ -713,7 +769,7 @@ function moveAmount(){
 		}
 }
 
-function decisionHistory2 (){
+function setDecisionHistory (){
  executeServerEvent("","DECISIONHISTORY","",true);
 }
 
@@ -758,12 +814,6 @@ function onLoadSvHv(){
 	executeServerEvent("QV_SPOKE_HUB_CE_TXN_DTLS","ONLOAD","",true);
 }
 
-function checkDeno(btn){
-	var resp = executeServerEvent(btn.id,"CUSTOM",getGridRowCount("table15")+"#"+getGridRowCount("table16")+"#"+getGridRowCount("table17")+"#"+getGridRowCount("table18"),true);
-	if (!(resp == null || resp == ""))
-		showMessage("",resp,"confirm");
-}
-
 function onloadNgnDenoTable(){
 	executeServerEvent("onloadNgnDenoTable","ONLOAD","",true);
 }
@@ -803,7 +853,7 @@ function transferTable(){
 	var Y = "Y";
 	if (loadFlag == null || loadFlag == empty || loadFlag != data){
 	if (cvFlag == Y){
-		if (activityName == "Central_Vault" && (prevWs == "Spoke_Verifier" || prevWs == "Spoke_HBS" )){
+		if ((activityName == "Central_Vault_LCY" && (prevWs == "Spoke_Verifier" || prevWs == "Spoke_HBS" )) || (activityName == "Central_Vault_FCY" && (prevWs == "Spoke_Verifier" || prevWs == "Spoke_HBS" ))){
 			if (reqType == cashEvacuation){
 			var resp = executeServerEvent("transferSpokeCvCeTable","CUSTOM","",true);
 			var resp1 = resp.split("#");
@@ -826,8 +876,8 @@ function transferTable(){
 								}]);
 
 			}
+			setLoadFlag();
 		}
-		setLoadFlag();
 	}
 	else if (activityName == "Hub_Verifier" && (prevWs == "Spoke_Verifier" || prevWs == "Spoke_HBS")){
 		if (reqType == cashEvacuation){
@@ -842,7 +892,7 @@ function transferTable(){
 		}
 		setLoadFlag();
 	} 
-	else if (activityName == "Central_Vault" && (prevWs == "Hub_Verifier" || prevWs == "Hub_HBS" )){
+	else if ((activityName == "Central_Vault_LCY" && (prevWs == "Hub_Verifier" || prevWs == "Hub_HBS" )) || (activityName == "Central_Vault_FCY" && (prevWs == "Hub_Verifier" || prevWs == "Hub_HBS" ))){
 		if (reqType == cashRequest){
 			var resp = executeServerEvent("transferHubCrTable","CUSTOM","",true);
 			var resp1 = resp.split("#");
@@ -894,7 +944,9 @@ function onLoadRtnTable(){
 }
 
 function onloadTable(){
-executeServerEvent("QV_CE_HUB_CV_TXN_DTLS","ONLOAD","",true);
+var resp = executeServerEvent("QV_CE_HUB_CV_TXN_DTLS","ONLOAD","",true);
+if (!isEmpty(resp))
+	showMessage('',resp,'confirm');
 }
 
 function fetchDetails(control){
@@ -938,18 +990,8 @@ function moveCurrencyInTableCeHubTable(){
 }
 
 function checkLimit(){
-var user = getWorkItemData("userName");
-var count = getGridRowCount("table20");
-if (count > 0){
-var resp = executeServerEvent("","CHECKLIMIT",getGridRowCount("table20"),true);
-showMessage("",resp,"confirm");
-}
-else {
-	showMessage("","Unable to fetch Limit For Staff ID: "+user+" please try again","error");
-	setStyle("fetchLimit","disable","false");
-}
-setValue("APPCODE","");
-setValue("FIDATA","");
+ var resp = executeServerEvent("","CHECKLIMIT","",true);
+ showMessage("",resp,"confirm");
 }
 
 function webServicePostHook(controlId) {
@@ -1039,8 +1081,7 @@ function crPostSpokeCv(btn){
 		showMessage("",resp1,"confirm");
 //	}
 	}
-	
-	//end posting calls
+//end posting calls
 
 function test2fa(){
 ValidateOTP();
@@ -1084,33 +1125,6 @@ function crPostChangeSpokeToHub(){
 	executeServerEvent("","CR_POST_CHANGE",getGridRowCount("table6"),true);
 }
 
-function decisionHistory(table){
-	var today = new Date();
-	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate()+' '+today.getHours()+':'+today.getMinutes()+':'+today.getSeconds();
-	var staff = getWorkItemData("userName");
-	var entryDate = getValue('EntryDateTime');
-    var entryDate2 = Date.parse(entryDate);
-    var date2 = Date.parse(date);
-	var TAT = (date2 - entryDate2);
-	var seconds = Math.round((TAT/1000)%60);
-    var TAT_Minutes = Math.round((TAT/(1000*60))%60);
-	var TAT_Hours = Math.round((TAT/(1000*60*60)));
-   
-	TAT_Minutes = (TAT_Minutes < 10) ? "0" + TAT_Minutes : TAT_Minutes;
-    seconds = (seconds < 10) ? "0" + seconds : seconds;
-
-	addDataToGrid(table,
-					[{
-						"Previous Queue":getValue("CURR_WS"),
-						"Logged Staff":staff,
-						"Queue Start Date Time":getValue("EntryDateTime"),
-						"Queue End Date Time" :date,
-						"TAT" :TAT_Hours+"h "+TAT_Minutes+"m "+seconds+"s",
-						"Decision":getValue("DECISION"),
-						"Remarks" :getValue("REMARKS")
-					}]);
-
-}
 
 function getUserName(btn){
 executeServerEvent("getUserId","CUSTOM",btn.id,true);
@@ -1160,7 +1174,9 @@ function moveSpokeCashEvacauationInTable(){
 }
 
 function ciCrHubAddTxnGrid(){
-	executeServerEvent("QV_CR_HUB_DTLS", "ONLOAD" , "" ,true);
+	var resp  = executeServerEvent("QV_CR_HUB_DTLS", "ONLOAD" , "" ,true);
+	if (!isEmpty(resp))
+		showMessage("",resp,"confirm");
 }
 
 function showLodgeByTable(btnId){
@@ -1181,7 +1197,7 @@ function changeInTable(){
 	var cvFlag = getValue("CVFLAG");
 	var Y = "Y";
 
-	if ((activityName.includes("Central") || activityName == "CV_Foreign_Currency_Post"  || activityName == "Hub_Vault_Officer" || activityName == "Hub_Verifier_Cash_Return" || activityName == "Hub_Post_Exception" || activityName == "Hub_HBS") && reqType == cashRequest){
+	if ((activityName.includes("Central") || activityName == "CV_Verifier_LCY" || activityName == "CV_Verifier_FCY"  || activityName == "Hub_Vault_Officer" || activityName == "Hub_Verifier_Cash_Return" || activityName == "Hub_Post_Exception" || activityName == "Hub_HBS") && reqType == cashRequest){
 		
 		setColumnVisible("table10", 3, false,true);
 		setColumnVisible("table10", 4, false,true);
@@ -1196,8 +1212,8 @@ function changeInTable(){
 		setStyle("add_table10","visible","false");
 		
 	}
-	else if ((activityName == "Central_Vault" || activityName == "CV_Foreign_Currency_Post" || activityName == "Central_Vault_Verifier" || 
-	activityName == "Central_Vault_Exception" || activityName == "Central_Vault_Post_Exception") && reqType == cashEvacuation ){
+	else if ((activityName == "Central_Vault_LCY" || activityName == "CV_Verifier_FCY" || activityName == "CV_Verifier_LCY" || 
+	activityName == "Central_Vault_FCY" || activityName == "Central_Vault_Post_Exception") && reqType == cashEvacuation ){
 	
 		setColumnVisible("table11", 0, false,true);
 		setColumnVisible("table11", 1, false,true);
@@ -1287,6 +1303,14 @@ function ciRVMOSpokeAddTxnGrid(){
 	executeServerEvent("QV_RV_DTLS", "ONLOAD" , "" ,true);
 }
 
+function setDenomination(){
+	var activityName = getWorkItemData("activityName");
+	var reqType = getValue("REQ_TYPE");
+	var cashRequest = "CashRequest";
+	if(activityName == "Hub_Initiator" || (activityName == "Hub_Maker" && reqType == cashRequest ) || activityName == "Spoke_Initiator")
+	executeServerEvent('','DENOMINATION','',true);
+}
+
 function displayDenomination() {
 	var activityName = getWorkItemData("activityName");
 	var reqType = getValue("REQ_TYPE");
@@ -1320,8 +1344,21 @@ function displayDenomination() {
 }		
 
 function displayDenominationTable (){
-	executeServerEvent("DENO_TYPE", "ONCHANGE" , "" ,true);
+	executeServerEvent("", "denoEvent" , "" ,true);
+	//executeServerEvent("DENO_TYPE", "ONCHANGE" , "" ,true);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
