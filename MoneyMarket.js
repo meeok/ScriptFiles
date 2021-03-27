@@ -46,7 +46,7 @@ function cpUpdateLandMsg(){
 
 function setupWin(){
    var resp = executeServerEvent('setupWin','onClick','',true);
-   if (resp == "Window setup successful"){
+   if (resp == "success"){
         showMessage("",resp,"confirm");
         completeWorkItem();
    }
