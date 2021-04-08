@@ -1,6 +1,9 @@
-
+var jsIR = document.createElement('script');
+jsIR.src = '/MoneyMarketW/CustomJS/table2excel.js';
+document.head.appendChild(jsIR);
 
 var ProcessName = "MoneyMarketW";
+let table;
 //WorkSteps
 var treasuryOfficerInitiator = "Treasury_Officer_Initiator";
 var treasuryOfficerVerifier = "Treasury_Officer_Verifier";
@@ -76,6 +79,35 @@ var cpPostFlag = getValue("cp_postFlag");
     return true;
 }
 
+
+function downloadCpPmBids(){
+    let hearders = ['Tenor','Rate','Total Amount','Rate Type','Count','Status'];
+    let id = "cpPmBidTbl";
+
+    let rows = [
+        {tenor: '7', rate: '10.0', totalAmount: '12000', rateType : 'kufre', count: '3', status: 'Awaiting Treasury' },
+        {tenor: '20', rate: '13.0', totalAmount: '11000', rateType : 'Bank', count: '4', status: 'Awaiting Treasury' },
+        {tenor: '200', rate: '7.0', totalAmount: '100', rateType : 'Personal', count: '3', status: 'Awaiting Treasury' },
+        {tenor: '150', rate: '11.0', totalAmount: '1200', rateType : 'Personal', count: '3', status: 'Awaiting Treasury' }
+    ];
+
+    table = creatVirtualTable(hearders,rows,id);
+    const iframe = document.getElementById('iframe3');
+    const iframeDocument = iframe.contentDocument;
+    iframeDocument.body.appendChild(table);
+
+const tableData = iframeDocument.querySelectorAll("#cpPmBidTbl");
+    exportToExcel(tableData,"bids");
+}
+
+function getPmGrid (){
+   return executeServerEvent('cpPmGrid','custom',getGridRowCount('table88'),true);
+}
+
+function loadIframe(){
+   var resp = document.getElementById("iframe1").src="CustomHtm/index.html";
+}
+
 function selectProcess (){
 	executeServerEvent('onChangeProcess','onChange','',true);
 }
@@ -90,10 +122,6 @@ function sendMail (){
     executeServerEvent('','sendMail','',true);
 }
 
-function cpDownloadGrid(){
-    var myWindow = window.open("", "MsgWindow", "width=200,height=100");
-    myWindow.document.write("<p>This is 'Download window'. Excel download completed</p>");
-}
 
 function goBackToDashboard(){
     executeServerEvent('onClickGoBackToDashboard','onClick','',true);
@@ -251,4 +279,51 @@ function docPaneRefresh(result,docIndex,addModeCustom) {
 
 function reloadDocumentList(){ 
     var obj = {"ReloadDocument":"true"}; window.parent.postMessage(obj, "*"); 
+}
+
+function exportToExcel (tableData, filename){
+    var table2excel = new Table2Excel();
+    table2excel.export(tableData,filename);
+}
+
+
+function getPmRows (){
+   let output = getPmGrid();
+   let outputs =  output.split("$");
+   let rows = [];
+   let count = outputs.length;
+   for (let i = 0; i <  count - 1; i++)
+        rows.push(JSON.parse(outputs[i]));
+   
+    console.log(rows);
+    return rows;
+}
+
+function creatVirtualTable(headers, rows, id){
+    let headRow = document.createElement('tr');
+    let table = document.createElement('table');
+    table.setAttribute('id',id);
+    var thead = table.createTHead();
+    var tbody = table.createTBody();
+
+    headers.forEach(headText =>{
+        let header = document.createElement('th');
+        let textNode = document.createTextNode(headText);
+        header.appendChild(textNode);
+        headRow.appendChild(header);
+    });
+    thead.appendChild(headRow);
+
+    rows.forEach(value => {
+        let row = document.createElement('tr');
+        Object.values(value).forEach(text =>{
+            let cell = document.createElement('td');
+            let  textNode = document.createTextNode(text);
+            cell.appendChild(textNode);
+            row.appendChild(cell);
+        });
+        tbody.appendChild(row);
+    })
+    console.log(table);
+    return table;
 }
