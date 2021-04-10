@@ -3,7 +3,6 @@ jsIR.src = '/MoneyMarketW/CustomJS/table2excel.js';
 document.head.appendChild(jsIR);
 
 var ProcessName = "MoneyMarketW";
-let table;
 //WorkSteps
 var treasuryOfficerInitiator = "Treasury_Officer_Initiator";
 var treasuryOfficerVerifier = "Treasury_Officer_Verifier";
@@ -28,6 +27,9 @@ var treasuryProcess ="tb_market";
 var cpPrimaryMarket = "primary";
 var cpSecondaryMarket = "secondary";
 var cpPostErrMsg ="Kindly Post Transaction";
+
+let flag = 'Y';
+let downloadFlagLocal = 'downloadFlag';
 
 
 
@@ -69,6 +71,9 @@ var cpPostFlag = getValue("cp_postFlag");
                     }
                 }
             }
+            if (activityName == treasuryOfficerMaker){
+
+            }
             setDecisionHistory();
             sendMail();
         } 
@@ -80,24 +85,59 @@ var cpPostFlag = getValue("cp_postFlag");
 }
 
 
+function cpUpdatePmBid(){
+
+}
+
+function cpPmViewGroupBids(){
+    const row = getRowIndex('table88');
+    if (row.length < 1) showMessage('','Kindly select a row to view','confirm');
+    else  executeServerEvent('viewGroupBids','onClick',row[0],true);
+}
+
+function getRowIndex(table){
+  return  getSelectedRowsIndexes(table);
+}
+
 function downloadCpPmBids(){
+   const downloadFlag = getValue('downloadFlag');
+    if (isEmpty(downloadFlag)){
+         handleDownload();
+         executeServerEvent('cpDownloadGrid','onClick','',true);
+    }
+}
+
+function handleDownload(){
     let hearders = ['Tenor','Rate','Total Amount','Rate Type','Count','Status'];
     let id = "cpPmBidTbl";
-
-    let rows = [
-        {tenor: '7', rate: '10.0', totalAmount: '12000', rateType : 'kufre', count: '3', status: 'Awaiting Treasury' },
-        {tenor: '20', rate: '13.0', totalAmount: '11000', rateType : 'Bank', count: '4', status: 'Awaiting Treasury' },
-        {tenor: '200', rate: '7.0', totalAmount: '100', rateType : 'Personal', count: '3', status: 'Awaiting Treasury' },
-        {tenor: '150', rate: '11.0', totalAmount: '1200', rateType : 'Personal', count: '3', status: 'Awaiting Treasury' }
-    ];
-
+    let cssId = "#cpPmBidTbl";
+    const fileName = "myBids";
+    let rows = getPmRows();
+    console.log(rows);
     table = creatVirtualTable(hearders,rows,id);
-    const iframe = document.getElementById('iframe3');
-    const iframeDocument = iframe.contentDocument;
-    iframeDocument.body.appendChild(table);
+    const myFrame = document.createElement('iframe');
+    const html = '<body>Download Content</body>';
+    document.body.appendChild(myFrame);
+    myFrame.contentWindow.document.open();
+    myFrame.contentWindow.document.write(html);
+    myFrame.contentWindow.document.close();
+    console.log(myFrame);
+    const myFrameDoc = myFrame.contentDocument;
+    console.log(myFrameDoc);
+    myFrameDoc.body.appendChild(table);
+    const tableData = myFrameDoc.querySelectorAll(cssId);
+    console.log(tableData);
+    myFrame.style.cssText = 'position: absolute; width:0; height:0;border:0;';
+    exportToExcel(tableData,fileName);
+    myTable = myFrameDoc.getElementById(id);
+    console.log(myTable);
+    myFrameDoc.body.removeChild(myTable);
+    console.log(myFrame);
+    document.body.removeChild(myFrame);
+}
 
-const tableData = iframeDocument.querySelectorAll("#cpPmBidTbl");
-    exportToExcel(tableData,"bids");
+function disableField(local){
+    setStyle(local,'disable','true');
 }
 
 function getPmGrid (){
@@ -186,9 +226,9 @@ function cpUpdateLandMsg(){
 function setupWin(){
    var resp = executeServerEvent('setupWin','onClick','',true);
    if (resp == "success"){
-        completeWorkItem();
+        showMessage('','Window setup sucessful kindly submit workitem','confirm');
    }
-   else   showMessage("",resp,"confirm");
+   else   showMessage("",resp,"error");
 }
 
 function cpSubmitlandMsgUpdate(){
@@ -289,14 +329,31 @@ function exportToExcel (tableData, filename){
 
 function getPmRows (){
    let output = getPmGrid();
+   console.log(output);
    let outputs =  output.split("$");
+   console.log('output array-- '+outputs);
+
    let rows = [];
    let count = outputs.length;
-   for (let i = 0; i <  count - 1; i++)
-        rows.push(JSON.parse(outputs[i]));
-   
-    console.log(rows);
+   console.log('count '+count);
+   for (let i = 0; i <  count - 1; i++){
+       console.log('string '+ outputs[i]);
+
+       let obj = JSON.parse(outputs[i]);
+        rows.push(obj);
+   }
     return rows;
+}
+
+function createTable(){
+    let hearders = ['Tenor','Rate','Total Amount','Rate Type','Count','Status'];
+    let rows = getPmRows();
+    console.log(rows);
+    let id = 'myId';
+
+    const table = creatVirtualTable(hearders,rows,id);
+
+    console.log(table);
 }
 
 function creatVirtualTable(headers, rows, id){
