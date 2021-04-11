@@ -1,2 +1,2 @@
 # ScriptFiles
-This repo is for my javascript files
+This repo is for javascript files
