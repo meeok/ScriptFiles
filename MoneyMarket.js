@@ -72,6 +72,13 @@ var cpPostFlag = getValue("cp_postFlag");
                 }
             }
             if (activityName == treasuryOfficerMaker){
+                if (cpMarket == cpSecondaryMarket){
+                    let resp = updateCpSmDtls();
+                    if (!isEmpty(resp)){
+                        showMessage('',resp,'error');
+                        return false;
+                    }
+                }
 
             }
             setDecisionHistory();
@@ -84,9 +91,21 @@ var cpPostFlag = getValue("cp_postFlag");
     return true;
 }
 
+function cpSmSetup(){
+    executeServerEvent('smSetup','onChange','',true);
+}
+
+function updateCpSmDtls(){
+    return executeServerEvent('smCpBidUpdate','onDone',getGridRowCount('table93'),true);
+}
 
 function cpUpdatePmBid(){
-
+    let selectedRows = getRowIndex('table90');
+    if (selectedRows.length < 1)showMessage('','Kindly select a bid row/s to update','confirm');
+    else { 
+            for (let i = 0; i < selectedRows.length; i++)
+             executeServerEvent('updateBids','onClick',selectedRows[i],true); 
+        }
 }
 
 function cpPmViewGroupBids(){
